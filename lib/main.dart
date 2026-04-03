@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fisofi_tech_challenge/screens/player_setup_screen.dart'; // Make sure this path matches your folder structure!
+import 'package:fisofi_tech_challenge/screens/player_setup_screen.dart';
 import 'package:fisofi_tech_challenge/widgets/primary_button.dart';
 
 void main() {

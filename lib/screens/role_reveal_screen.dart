@@ -1,14 +1,15 @@
+import 'package:fisofi_tech_challenge/screens/voting_screen.dart';
 import 'package:fisofi_tech_challenge/widgets/role_reveal_hidden.dart';
 import 'package:fisofi_tech_challenge/widgets/role_reveal_revealed.dart';
 import 'package:flutter/material.dart';
-import '../models/player.dart';
-import '../controllers/reveal_controller.dart';
+import 'package:fisofi_tech_challenge/models/game_session.dart';
+import 'package:fisofi_tech_challenge/controllers/reveal_controller.dart'; // Make sure this matches your file name!
+// Required for the transition
 
 class RoleRevealScreen extends StatefulWidget {
-  // We require the list of players to be passed into this screen
-  final List<Player> players;
+  final GameSession session;
 
-  const RoleRevealScreen({super.key, required this.players});
+  const RoleRevealScreen({super.key, required this.session});
 
   @override
   State<RoleRevealScreen> createState() => _RoleRevealScreenState();
@@ -20,8 +21,8 @@ class _RoleRevealScreenState extends State<RoleRevealScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize the controller with the players passed from the Setup Screen
-    _controller = RevealController(widget.players);
+    // Initialize the controller with the players inside the session
+    _controller = RevealController(widget.session.players);
   }
 
   @override
@@ -35,7 +36,8 @@ class _RoleRevealScreenState extends State<RoleRevealScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Secret Identity'),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading:
+            false, // ANTI-CHEAT: Removes the back button!
         centerTitle: true,
       ),
       body: ListenableBuilder(
@@ -53,7 +55,14 @@ class _RoleRevealScreenState extends State<RoleRevealScreen> {
                       onNext: () {
                         final isFinished = _controller.nextPlayer();
                         if (isFinished) {
-                          print('Navigate to Discussion Phase!');
+                          // Pass the unbroken session directly to the Voting Screen
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  VotingScreen(session: widget.session),
+                            ),
+                          );
                         }
                       },
                     )

@@ -1,5 +1,6 @@
 import 'package:fisofi_tech_challenge/controllers/game_setup_controller.dart';
-import 'package:fisofi_tech_challenge/screens/role_reveal_scren.dart';
+import 'package:fisofi_tech_challenge/models/game_session.dart';
+import 'package:fisofi_tech_challenge/screens/role_reveal_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fisofi_tech_challenge/widgets/primary_button.dart';
 import 'package:fisofi_tech_challenge/widgets/number_slider.dart';
@@ -105,17 +106,21 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
                                 );
                               }
                             : () {
+                                //  Generate the raw list of players
                                 final activePlayers = _controller
                                     .generatePlayers();
 
-                                // Instead of pushing normally, we use pushReplacement!
-                                // This destroys the Setup Screen so the user can't hit the Android physical back button to get back to it.
+                                //  NEW: Wrap them in your GameSession model
+                                final newSession = GameSession(
+                                  players: activePlayers,
+                                );
+
+                                // Push to the reveal screen, passing the entire session
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => RoleRevealScreen(
-                                      players: activePlayers,
-                                    ),
+                                    builder: (context) =>
+                                        RoleRevealScreen(session: newSession),
                                   ),
                                 );
                               },

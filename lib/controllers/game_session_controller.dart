@@ -2,23 +2,19 @@ import 'package:flutter/material.dart';
 import '../models/player.dart';
 import '../models/game_session.dart';
 
+enum GameWinner { none, citizens, undercovers }
+
 class GameSessionController extends ChangeNotifier {
   final GameSession session;
-
-  // The temporary state map
   Map<Player, int> votes = {};
 
   GameSessionController(this.session) {
     _initializeVotes();
   }
 
-  // Gets the total number of votes currently cast
   int get totalVotesCast => votes.values.fold(0, (sum, count) => sum + count);
-
-  // Checks if everyone has voted
   bool get allVotesCast => totalVotesCast == session.activePlayers.length;
 
-  // Resets the map for a new round
   void _initializeVotes() {
     votes.clear();
     for (var player in session.activePlayers) {
@@ -41,7 +37,6 @@ class GameSessionController extends ChangeNotifier {
     }
   }
 
-  // Returns the eliminated player, or null if it was a tie.
   Player? tallyVotesAndEliminate() {
     int maxVotes = 0;
     Player? eliminatedPlayer;
@@ -51,21 +46,38 @@ class GameSessionController extends ChangeNotifier {
       if (voteCount > maxVotes) {
         maxVotes = voteCount;
         eliminatedPlayer = player;
-        isTie = false; // Reset tie flag if we found a new highest
+        isTie = false;
       } else if (voteCount == maxVotes && maxVotes > 0) {
-        isTie = true; // Two people have the same highest votes
+        isTie = true;
       }
     });
 
     if (isTie || eliminatedPlayer == null) {
-      return null; // Nobody is eliminated
+      return null;
     } else {
-      eliminatedPlayer!.isEliminated = true; // Mark them dead!
+      eliminatedPlayer!.isEliminated = true;
       return eliminatedPlayer;
     }
   }
 
-  // Call this to move to the next round if the game isn't over
+  //  Win Condition Logic
+  GameWinner checkWinCondition() {
+    //Rule 1: Citizens win if the Undercover is eliminated
+    if (session.activeUndercovers == 0) {
+      return GameWinner.citizens;
+    }
+    //Rule 2: Undercover wins if only two players remain (the Undercover and one Citizen)
+    // (Plus the safety net for multiple undercovers)
+    else if ((session.totalActivePlayers == 2 &&
+            session.activeUndercovers == 1) ||
+        session.activeUndercovers >= session.activeCitizens) {
+      return GameWinner.undercovers;
+    }
+
+    //No win condition met yet, keep playing!
+    return GameWinner.none;
+  }
+
   void startNextRound() {
     session.roundNumber++;
     _initializeVotes();

@@ -1,3 +1,5 @@
+import 'package:fisofi_tech_challenge/screens/player_setup_screen.dart';
+import 'package:fisofi_tech_challenge/widgets/game_result_dialog.dart';
 import 'package:flutter/material.dart';
 import '../models/player.dart';
 import '../models/game_session.dart';
@@ -28,58 +30,123 @@ class _VotingScreenState extends State<VotingScreen> {
     super.dispose();
   }
 
-  // --- THE RESULT POPUP ---
   void _showResultDialog(Player? eliminatedPlayer) {
+    // 1. Check if the game is over!
+    final winner = _controller.checkWinCondition();
+
     showDialog(
       context: context,
       barrierDismissible: false, // Force them to click a button
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            eliminatedPlayer == null ? 'It\'s a Tie!' : 'Player Eliminated',
-            textAlign: TextAlign.center,
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (eliminatedPlayer == null) ...[
-                const Icon(Icons.balance, size: 60, color: Colors.orange),
+        // SCENARIO A: GAME OVER
+        if (winner != GameWinner.none) {
+          final isCitizensWin = winner == GameWinner.citizens;
+
+          return GameResultDialog(
+            title: isCitizensWin ? 'Citizens Win!' : 'Undercovers Win!',
+            icon: Icons.emoji_events,
+            iconColor: Colors.amber,
+            content: Column(
+              children: [
+                Text(
+                  isCitizensWin
+                      ? 'All Undercovers have been eliminated!'
+                      : 'The Undercovers have taken over!',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
                 const SizedBox(height: 16),
                 const Text(
-                  'The votes were tied. No one is eliminated this round!',
-                ),
-              ] else ...[
-                const Icon(
-                  Icons.person_remove,
-                  size: 60,
-                  color: Colors.redAccent,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  eliminatedPlayer.name,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  'Game Summary:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'Their role was: ${eliminatedPlayer.role.name.toUpperCase()}',
+                // A compact list of everyone's true identities
+                ..._controller.session.players.map(
+                  (p) => Text(
+                    '${p.name}: ${p.role.name.toUpperCase()} (${p.secretWord})',
+                    style: TextStyle(
+                      color: p.role == Role.undercover
+                          ? Colors.red
+                          : Colors.green,
+                      decoration: p.isEliminated
+                          ? TextDecoration.lineThrough
+                          : null,
+                    ),
+                  ),
                 ),
               ],
+            ),
+            actions: [
+              PrimaryButton(
+                text: 'New Game',
+                icon: Icons.replay,
+                onPressed: () {
+                  // This completely flushes the routing stack and starts fresh!
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PlayerSetupScreen(),
+                    ),
+                    (Route<dynamic> route) => false,
+                  );
+                },
+              ),
+            ],
+          );
+        }
+
+        // SCENARIO B: NO WINNER YET - IT WAS A TIE
+        if (eliminatedPlayer == null) {
+          return GameResultDialog(
+            title: 'It\'s a Tie!',
+            icon: Icons.balance,
+            iconColor: Colors.orange,
+            content: const Text(
+              'The votes were tied. No one is eliminated this round!',
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              PrimaryButton(
+                text: 'Next Round',
+                icon: Icons.arrow_forward,
+                onPressed: () {
+                  Navigator.pop(context);
+                  _controller.startNextRound();
+                },
+              ),
+            ],
+          );
+        }
+
+        // SCENARIO C: NO WINNER YET - SOMEONE WAS ELIMINATED
+        return GameResultDialog(
+          title: 'Player Eliminated',
+          icon: Icons.person_remove,
+          iconColor: Colors.redAccent,
+          content: Column(
+            children: [
+              Text(
+                eliminatedPlayer.name,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Their role was: ${eliminatedPlayer.role.name.toUpperCase()}',
+              ),
             ],
           ),
           actions: [
-            Center(
-              child: PrimaryButton(
-                text: 'Continue',
-                icon: Icons.arrow_forward,
-                onPressed: () {
-                  Navigator.pop(context); // Close dialog
-                  // TODO: Check Win Condition here!
-                  _controller.startNextRound(); // Temp logic to keep playing
-                },
-              ),
+            PrimaryButton(
+              text: 'Next Round',
+              icon: Icons.arrow_forward,
+              onPressed: () {
+                Navigator.pop(context);
+                _controller.startNextRound();
+              },
             ),
           ],
         );

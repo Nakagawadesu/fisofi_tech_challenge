@@ -70,7 +70,7 @@ class GameSessionController extends ChangeNotifier {
     // (Plus the safety net for multiple undercovers)
     else if ((session.totalActivePlayers == 2 &&
             session.activeUndercovers == 1) ||
-        session.activeUndercovers >= session.activeCitizens) {
+        session.activeUndercovers > session.activeCitizens) {
       return GameWinner.undercovers;
     }
 

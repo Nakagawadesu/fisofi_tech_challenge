@@ -104,10 +104,13 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
                                 );
                               }
                             : () {
-                                final names = _controller.nameControllers
-                                    .map((c) => c.text)
-                                    .toList();
-                                print('Ready to start with: $names');
+                                final activePlayers = _controller
+                                    .generatePlayers();
+
+                                print('--- GAME STARTED ---');
+                                for (var player in activePlayers) {
+                                  print(player.toString());
+                                }
                               },
                       ),
                     ),

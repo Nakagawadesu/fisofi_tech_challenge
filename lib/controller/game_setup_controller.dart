@@ -1,4 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import '../models/player.dart';
+import '../constants/game_config.dart';
 
 class GameSetupController extends ChangeNotifier {
   int playerCount = 3;
@@ -60,6 +64,48 @@ class GameSetupController extends ChangeNotifier {
 
     // Tell the UI to redraw the red error text
     notifyListeners();
+  }
+
+  List<Player> generatePlayers() {
+    final random = Random();
+
+    // 1. Get the cleaned up list of names
+    final names = nameControllers.map((c) => c.text.trim()).toList();
+    final totalPlayers = names.length;
+
+    // 2. Pick a random word pair
+    final pair =
+        GameConfig.wordPairs[random.nextInt(GameConfig.wordPairs.length)];
+    final citizenWord = pair['majority']!;
+    final undercoverWord = pair['minority']!;
+
+    // 3. Determine how many undercovers we need
+    final undercoverCount = GameConfig.getRandomUndercoverCount(totalPlayers);
+
+    // 4. Shuffle the names to ensure random role assignment
+    final shuffledNames = List<String>.from(names)..shuffle(random);
+
+    List<Player> generatedPlayers = [];
+
+    // 5. Assign the roles
+    for (int i = 0; i < totalPlayers; i++) {
+      final name = shuffledNames[i];
+      if (i < undercoverCount) {
+        generatedPlayers.add(
+          Player(name: name, role: Role.undercover, secretWord: undercoverWord),
+        );
+      } else {
+        generatedPlayers.add(
+          Player(name: name, role: Role.citizen, secretWord: citizenWord),
+        );
+      }
+    }
+
+    // 6. Shuffle one last time so the resulting list isn't strictly
+    // "Undercovers first, Citizens last" in the turn order!
+    generatedPlayers.shuffle(random);
+
+    return generatedPlayers;
   }
 
   @override

@@ -1,4 +1,5 @@
-import 'package:fisofi_tech_challenge/controller/game_setup_controller.dart';
+import 'package:fisofi_tech_challenge/controllers/game_setup_controller.dart';
+import 'package:fisofi_tech_challenge/screens/role_reveal_scren.dart';
 import 'package:flutter/material.dart';
 import 'package:fisofi_tech_challenge/widgets/primary_button.dart';
 import 'package:fisofi_tech_challenge/widgets/number_slider.dart';
@@ -107,10 +108,16 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
                                 final activePlayers = _controller
                                     .generatePlayers();
 
-                                print('--- GAME STARTED ---');
-                                for (var player in activePlayers) {
-                                  print(player.toString());
-                                }
+                                // Instead of pushing normally, we use pushReplacement!
+                                // This destroys the Setup Screen so the user can't hit the Android physical back button to get back to it.
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RoleRevealScreen(
+                                      players: activePlayers,
+                                    ),
+                                  ),
+                                );
                               },
                       ),
                     ),
